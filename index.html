@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BİLGİSDAN: INFINITE REALISM</title>
+    <style>
+        :root { 
+            --neon: #00d4ff; --gold: #ffd700; --green: #39ff14; --lava: #ff4500; 
+            --diamond: #b9f2ff; --fire: linear-gradient(180deg, #ff4500, #900);
+            --bg-color: #000;
+        }
+        body { background: var(--bg-color); color: white; text-align: center; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; transition: background 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Arka Plan Efektleri Konteyneri */
+        #effectContainer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        
+        /* Global Ateş Parçacıkları (Menü için) */
+        .fire-particle { position: absolute; bottom: -30px; background: orange; border-radius: 50%; opacity: 0.5; animation: burn 4s infinite linear; filter: blur(4px); }
+        @keyframes burn { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(-800px) scale(0.2); opacity: 0; } }
+
+        /* Siber Arena Kod Yağmuru */
+        .matrix-code { position: absolute; color: #0f0; font-family: monospace; font-size: 14px; animation: matrixDrop linear infinite; opacity: 0; }
+        @keyframes matrixDrop { 0% { transform: translateY(-100%); opacity: 1; } 100% { transform: translateY(100vh); opacity: 0; } }
+
+        /* Buz Arena Kar Yağmuru */
+        .snowflake { position: absolute; color: #fff; font-size: 20px; animation: snowDrop linear infinite; }
+        @keyframes snowDrop { 0% { transform: translateY(-10px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; } }
+
+        /* Paneller */
+        .panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(25px); transition: 0.4s; }
+        .hidden { opacity: 0; pointer-events: none; display: none !important; }
+        
+        /* Buton Efektleri */
+        .main-btn { 
+            background: var(--fire); border: 2px solid rgba(255,255,255,0.3); color: white; 
+            padding: 18px 45px; margin: 12px; font-size: 20px; font-weight: 900; cursor: pointer; 
+            border-radius: 20px; transition: transform 0.3s, box-shadow 0.3s; text-transform: uppercase; letter-spacing: 3px;
+        }
+        .main-btn:hover { transform: scale(1.15); box-shadow: 0 0 40px var(--lava); border-color: white; }
+        .main-btn:active { transform: scale(0.95); }
+
+        /* Market Premium Resimli Tasarım */
+        .market-container { width: 95%; max-height: 70vh; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .market-card { 
+            background: rgba(255,255,255,0.08); border: 2px solid transparent; padding: 15px; border-radius: 25px; 
+            transition: 0.3s; cursor: pointer; position: relative;
+        }
+        .market-card:hover { background: rgba(255,255,255,0.15); transform: translateY(-5px); }
+        .card-active { border-color: var(--gold); background: rgba(255, 215, 0, 0.15); box-shadow: 0 0 20px var(--gold); }
+        .item-img { font-size: 45px; margin-bottom: 8px; display: block; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+        
+        .stat-badge { background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 50px; border: 2px solid var(--gold); font-weight: 900; margin: 5px; display: inline-block; }
+        .diamond-badge { border-color: var(--neon); color: var(--diamond); }
+
+        /* Oyun HUD */
+        .hud { display: flex; justify-content: space-around; padding: 15px; background: rgba(0,0,0,0.8); border-bottom: 3px solid var(--lava); font-weight: 900; font-size: 14px; position: relative; z-index: 10; }
+        canvas { display: block; margin: 20px auto; border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.5); background: #000; position: relative; z-index: 5; }
+        
+        #liveScore { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: var(--fire); padding: 10px 30px; border-radius: 50px; font-weight: 900; display: none; z-index: 50; border: 2px solid white; }
+    </style>
+</head>
+<body>
+
+    <div id="effectContainer"></div>
+    <div id="liveScore">SKOR: 0</div>
+
+    <div id="menu" class="panel">
+        <h3 style="color: var(--gold); letter-spacing: 5px; margin: 0;">BİLGİSTAN OYUNLARI</h3>
+        <h1 style="font-size: 60px; margin: 10px 0; text-shadow: 0 0 30px var(--lava);">INFINITE REALISM</h1>
+        <div style="margin-bottom: 30px;">
+            <div class="stat-badge">🪙 <span class="coin-display">0</span></div>
+            <div class="stat-badge diamond-badge">💎 <span class="diamond-display">0</span></div>
+        </div>
+        <button class="main-btn" id="startBtn">SAVAŞA BAŞLA</button>
+        <button class="main-btn" id="marketBtn">DEV MAĞAZA</button>
+        <button class="main-btn" id="aboutBtn">REHBER</button>
+    </div>
+
+    <div id="market" class="panel hidden">
+        <h1 style="color: var(--diamond);">MAĞAZA & TAKAS</h1>
+        <div style="margin-bottom: 15px;">
+            <button class="main-btn" style="padding:10px 20px; font-size:14px;" id="buyDiamondBtn">1000 🪙 ➔ 1 💎</button>
+            <button class="main-btn" style="padding:10px 20px; font-size:14px; background:var(--neon); color:black;" id="sellDiamondBtn">1 💎 ➔ 1000 🪙</button>
+        </div>
+        <div class="market-container" id="marketGrid"></div>
+        <button class="main-btn" id="closeMarketBtn" style="background:#333;">MENÜYE DÖN</button>
+    </div>
+
+    <div id="about" class="panel hidden">
+        <div style="background: rgba(0,0,0,0.9); padding: 30px; border-radius: 30px; border: 2px solid var(--neon); width: 80%; text-align: left; line-height: 1.6;">
+            <h2 style="text-align: center; color: var(--neon);">BİLGİSTAN KILAVUZU</h2>
+            <p>🕹️ <b>Nasıl Oynanır?</b> Fareyi veya parmağını sağa sola kaydırarak raketi kontrol et. Topun düşmesine izin verme!</p>
+            <p>💎 <b>Elmas Nasıl Alınır?</b> 5 seviyeyi (tüm blokları temizleyerek) üst üste bitirirsen 10 Elmas kazanırsın. Ayrıca Mağaza'dan altın karşılığı takas edebilirsin.</p>
+            <p>🪙 <b>Altın Nasıl Alınır?</b> Her kırdığın blok sana altın kazandırır. Seviye sonlarında büyük ödüller vardır.</p>
+            <p>🎭 <b>Arenalar:</b> Mağazadan aldığın arenalar oyunun atmosferini tamamen değiştirir ve yeni özellikler ekler.</p>
+        </div>
+        <button class="main-btn" id="closeAboutBtn">ANLADIM</button>
+    </div>
+
+    <div class="hud">
+        <div>LEVEL: <span id="level">1</span></div>
+        <div>🪙: <span class="coin-display">0</span></div>
+        <div>💎: <span class="diamond-display">0</span></div>
+        <div>REKOR: <span id="highScore">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const effectContainer = document.getElementById("effectContainer");
+
+        // Kayıtlı Veriler
+        let coins = parseInt(localStorage.getItem("bilgistanCoins")) || 0;
+        let diamonds = parseInt(localStorage.getItem("bilgistanDiamonds")) || 0;
+        let highScore = parseInt(localStorage.getItem("bilgistanRekor")) || 0;
+        let ownedItems = JSON.parse(localStorage.getItem("ownedItems")) || ["ball_0", "bg_0"];
+        let activeBall = localStorage.getItem("activeBall") || "ball_0";
+        let activeBG = localStorage.getItem("activeBG") || "bg_0";
+
+        // Oyun Motoru Değişkenleri
+        let gameRunning = false, score = 0, level = 1, combo = 0;
+        let x, y, dx, dy, paddleX, paddleWidth = 100;
+        let bricks = [];
+        let matrixInterval, snowInterval;
+
+        // Market Verileri (Resimli Görünüm için Emojiler ve Renkler)
+        const items = [
+            {id: "ball_0", n: "Klasik Top", v: "⚪", p: 0, t: "top"},
+            {id: "ball_1", n: "Futbol Topu", v: "⚽", p: 500, t: "top"},
+            {id: "ball_2", n: "Basket Topu", v: "🏀", p: 1200, t: "top"},
+            {id: "ball_3", n: "Tenis Topu", v: "🎾", p: 2500, t: "top"},
+            {id: "ball_4", n: "Bilardo 8", v: "🎱", p: 4000, t: "top"},
+            {id: "ball_5", n: "Kristal Küre", v: "🔮", p: 6000, t: "top"},
+            {id: "ball_6", n: "Ateş Topu", v: "🔥", p: 10000, t: "top"},
+            {id: "ball_7", n: "Dünya Topu", v: "🌍", p: 15000, t: "top"},
+            {id: "ball_8", n: "Ay Simülatörü", v: "🌙", p: 20000, t: "top"},
+            {id: "ball_9", n: "Elmas Top", v: "💎", p: 50000, t: "top"},
+            {id: "bg_0", n: "Gece (Klasik)", v: "🌑", p: 0, t: "bg", color: "#000"},
+            {id: "bg_1", n: "Çöl Arenası", v: "🌵", p: 800, t: "bg", color: "#321"},
+            {id: "bg_2", n: "Orman Arenası", v: "🌲", p: 2000, t: "bg", color: "#020"},
+            {id: "bg_3", n: "Okyanus Arenası", v: "🌊", p: 5000, t: "bg", color: "#003"},
+            {id: "bg_4", n: "Uzay Arenası", v: "🚀", p: 8000, t: "bg", color: "#001"},
+            {id: "bg_5", n: "Lav Arenası", v: "🌋", p: 12000, t: "bg", color: "#300"},
+            {id: "bg_6", n: "Siber Arena", v: "📟", p: 18000, t: "bg", color: "#011"},
+            {id: "bg_7", n: "Buz Arenası", v: "❄️", p: 25000, t: "bg", color: "#234"},
+            {id: "bg_8", n: "Altın Arena", v: "📀", p: 35000, t: "bg", color: "#330"},
+            {id: "bg_9", n: "Cennet Arenası", v: "👼", p: 60000, t: "bg", color: "#58c"}
+        ];
+
+        function save() {
+            localStorage.setItem("bilgistanCoins", coins);
+            localStorage.setItem("bilgistanDiamonds", diamonds);
+            localStorage.setItem("ownedItems", JSON.stringify(ownedItems));
+            localStorage.setItem("activeBall", activeBall);
+            localStorage.setItem("activeBG", activeBG);
+            updateUI();
+        }
+
+        function updateUI() {
+            document.querySelectorAll(".coin-display").forEach(el => el.innerText = coins);
+            document.querySelectorAll(".diamond-display").forEach(el => el.innerText = diamonds);
+            document.getElementById("highScore").innerText = highScore;
+            document.getElementById("level").innerText = level;
+            document.getElementById("liveScore").innerText = "SKOR: " + score;
+            
+            // Arka plan rengini arenaya göre değiştir
+            const currentBG = items.find(i => i.id === activeBG);
+            document.body.style.backgroundColor = currentBG.color;
+            stopAllEffects();
+            startCurrentBGInterval(currentBG.id);
+        }
+
+        // --- Efekt Yönetimi ---
+        function stopAllEffects() {
+            clearInterval(matrixInterval);
+            clearInterval(snowInterval);
+            effectContainer.innerHTML = ""; // Tüm DOM efektlerini temizle
+        }
+
+        function startCurrentBGInterval(bgId) {
+            if (bgId === "bg_6") { // Siber - Matrix
+                matrixInterval = setInterval(createMatrixCode, 100);
+            } else if (bgId === "bg_7") { // Buz - Kar
+                snowInterval = setInterval(createSnowflake, 150);
+            } else { // Menü veya Efektsiz Arenalar için Temel Ateş
+                for(let i=0; i<15; i++) createFireParticle();
+            }
+        }
+
+        // Siber - Matrix Kodu
+        function createMatrixCode() {
+            const code = document.createElement("div");
+            code.className = "matrix-code";
+            code.innerText = Math.random() > 0.5 ? "1" : "0";
+            code.style.left = Math.random() * 100 + "vh";
+            code.style.animationDuration = Math.random() * 3 + 2 + "s";
+            effectContainer.appendChild(code);
+            setTimeout(() => code.remove(), 5000);
+        }
+
+        // Buz - Snowflake
+        function createSnowflake() {
+            const flake = document.createElement("div");
+            flake.className = "snowflake";
+            flake.innerText = "❄";
+            flake.style.left = Math.random() * 100 + "vh";
+            flake.style.animationDuration = Math.random() * 5 + 3 + "s";
+            effectContainer.appendChild(flake);
+            setTimeout(() => flake.remove(), 8000);
+        }
+
+        // Global Ateş Parçacıkları (Menü/Diğer Arenalar için)
+        function createFireParticle() {
+            let p = document.createElement("div");
+            p.className = "fire-particle";
+            p.style.left = Math.random()*100 + "%";
+            p.style.width = p.style.height = (Math.random()*15+5)+"px";
+            p.style.animationDelay = Math.random()*4+"s";
+            effectContainer.appendChild(p);
+        }
+
+        // --- Market ve UI ---
+        function renderMarket() {
+            const grid = document.getElementById("marketGrid");
+            grid.innerHTML = "";
+            items.forEach(item => {
+                const isOwned = ownedItems.includes(item.id);
+                const isActive = (activeBall === item.id || activeBG === item.id);
+                const card = document.createElement("div");
+                card.className = `market-card ${isActive ? 'card-active' : ''}`;
+                card.innerHTML = `
+                    <span class="item-img">${item.v}</span>
+                    <strong style="display:block; font-size:14px;">${item.n}</strong>
+                    <span style="font-size:12px; color:var(--gold);">${isOwned ? 'SAHİPSİN' : item.p + ' 🪙 / ' + (item.p/1000) + ' 💎'}</span>
+                    <button class="main-btn" style="padding:5px; font-size:10px; min-width:auto; width:100%; margin-top:10px;" id="buy-${item.id}">
+                        ${isActive ? 'SEÇİLİ' : (isOwned ? 'KULLAN' : 'SATIN AL')}
+                    </button>
+                `;
+                grid.appendChild(card);
+                document.getElementById(`buy-${item.id}`).onclick = () => {
+                    if(isOwned) {
+                        if(item.t === "top") activeBall = item.id; else activeBG = item.id;
+                    } else if(coins >= item.p) {
+                        coins -= item.p; ownedItems.push(item.id);
+                        if(item.t === "top") activeBall = item.id; else activeBG = item.id;
+                    } else if(diamonds >= item.p/1000) {
+                        diamonds -= item.p/1000; ownedItems.push(item.id);
+                        if(item.t === "top") activeBall = item.id; else activeBG = item.id;
+                    } else { alert("Yetersiz Kaynak!"); }
+                    save(); renderMarket();
+                };
+            });
+        }
+
+        // Oyun Başlatma
+        document.getElementById("startBtn").onclick = () => {
+            document.getElementById("menu").classList.add("hidden");
+            document.getElementById("liveScore").style.display = "block";
+            score = 0; level = 1; combo = 0; gameRunning = true;
+            initLevel();
+            gameLoop();
+        };
+
+        // Menü Butonları
+        document.getElementById("marketBtn").onclick = () => { renderMarket(); document.getElementById("market").classList.remove("hidden"); };
+        document.getElementById("closeMarketBtn").onclick = () => document.getElementById("market").classList.add("hidden");
+        document.getElementById("aboutBtn").onclick = () => document.getElementById("about").classList.remove("hidden");
+        document.getElementById("closeAboutBtn").onclick = () => document.getElementById("about").classList.add("hidden");
+
+        // Takas Butonları
+        document.getElementById("buyDiamondBtn").onclick = () => { if(coins >= 1000) { coins -= 1000; diamonds += 1; save(); } };
+        document.getElementById("sellDiamondBtn").onclick = () => { if(diamonds >= 1) { diamonds -= 1; coins += 1000; save(); } };
+
+        // HİLE KODLARI
+        let cheatStr = "";
+        window.onkeydown = (e) => {
+            cheatStr += e.key.toLowerCase();
+            if(cheatStr.includes("safe")) { coins += 10000; cheatStr = ""; save(); alert("SİSTEM: +10.000 ALTIN!"); }
+            if(cheatStr.includes("bilgisdan12345")) { diamonds += 100; cheatStr = ""; save(); alert("VIP: +100 ELMAS!"); }
+            if(cheatStr.length > 20) cheatStr = "";
+        };
+
+        function initLevel() {
+            paddleWidth = 100;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            x = canvas.width / 2;
+            y = canvas.height - 70;
+            dx = 2; dy = -2; // Yavaş Başlangıç
+            bricks = [];
+            for(let c=0; c<5; c++) {
+                bricks[c] = [];
+                for(let r=0; r<5; r++) { bricks[c][r] = { x:0, y:0, status:1 }; }
+            }
+            updateUI();
+        }
+
+        function gameLoop() {
+            if(!gameRunning) return;
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const bg = items.find(i => i.id === activeBG);
+            ctx.fillStyle = bg.color; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Arena Çizimi (Canvas içi)
+            if(activeBG === "bg_0") { // Gece
+                ctx.fillStyle = "white"; ctx.font = "30px Arial"; ctx.fillText("🌙", 300, 100);
+            } else if(activeBG === "bg_1") { // Çöl
+                ctx.fillStyle = "#A80"; ctx.fillRect(0, 400, 400, 100);
+                ctx.fillStyle = "#860"; ctx.font = "20px Arial"; ctx.fillText("🐫🌵", 50, 420); ctx.fillText("🐫", 300, 440);
+            } else if(activeBG === "bg_2") { // Orman
+                ctx.fillStyle = "#141"; ctx.fillRect(0, 420, 400, 80);
+                ctx.fillStyle = "#151"; ctx.font = "20px Arial"; ctx.fillText("🌲🦌", 30, 440); ctx.fillText("🌲", 340, 460);
+            } else if(activeBG === "bg_3") { // Okyanus
+                ctx.fillStyle = "#013"; ctx.fillRect(0, 450, 400, 50);
+                ctx.fillStyle = "#047"; ctx.font = "20px Arial"; ctx.fillText("🐟🐠", 70, 460); ctx.fillText("🐙", 150, 465); ctx.fillText("🐬", 250, 460);
+            } else if(activeBG === "bg_4") { // Uzay
+                ctx.fillStyle = "white"; for(let i=0; i<30; i++) ctx.fillRect((i*133)%400, (i*77)%500, 2, 2);
+                ctx.font = "30px Arial"; ctx.fillText("🪐", 300, 100); ctx.fillText("🛸", 80, 200);
+            } else if(activeBG === "bg_5") { // Lav
+                ctx.fillStyle = "red"; ctx.fillRect(0, 400, 400, 100);
+                ctx.fillStyle = "orange"; ctx.beginPath(); ctx.moveTo(50, 400); ctx.lineTo(100, 300); ctx.lineTo(150, 400); ctx.fill();
+                ctx.font = "20px Arial"; ctx.fillText("🌋🔥", 200, 380);
+            } else if(activeBG === "bg_7") { // Buz
+                ctx.fillStyle = "#add8e6"; ctx.fillRect(0, 430, 400, 70);
+                ctx.font = "20px Arial"; ctx.fillText("⛄", 50, 450); ctx.fillText("🌲❄", 340, 460);
+            } else if(activeBG === "bg_8") { // Altın
+                ctx.fillStyle = "gold"; ctx.shadowBlur = 15; ctx.shadowColor = "gold"; ctx.fillRect(0, 0, 400, 500); ctx.shadowBlur = 0;
+            } else if(activeBG === "bg_9") { // Cennet
+                ctx.fillStyle = "#7ec0ee"; ctx.fillRect(0,0,400,500);
+                ctx.fillStyle = "white"; ctx.shadowBlur = 15; ctx.shadowColor = "white";
+                ctx.beginPath(); ctx.arc(100, 100, 30, 0, Math.PI*2); ctx.arc(120, 100, 25, 0, Math.PI*2); ctx.arc(300, 200, 35, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            let rem = 0;
+            for(let c=0; c<5; c++) {
+                for(let r=0; r<5; r++) {
+                    let b = bricks[c][r];
+                    if(b.status === 1) {
+                        rem++;
+                        let bx = c*76 + 12; let by = r*28 + 60;
+                        ctx.fillStyle = ["#FF3131", "#FFD700", "#39FF14", "#00D4FF", "#FF00FF"][r];
+                        ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle;
+                        ctx.fillRect(bx, by, 70, 20);
+                        ctx.shadowBlur = 0;
+
+                        if(x > bx && x < bx+70 && y > by-15 && y < by+20) {
+                            dy = -dy; b.status = 0; score++; coins += 3;
+                            dx *= 1.018; dy *= 1.018; updateUI();
+                        }
+                    }
+                }
+            }
+
+            if(rem === 0) { 
+                level++; combo++; 
+                if(combo === 5) { diamonds += 10; combo = 0; }
+                coins += 100; save(); initLevel(); 
+            }
+
+            let ballIcon = items.find(i => i.id === activeBall).v;
+            ctx.font = "30px Arial"; ctx.textAlign = "center"; ctx.fillText(ballIcon, x, y);
+            ctx.fillStyle = "white"; ctx.fillRect(paddleX, 475, paddleWidth, 12);
+
+            if(x + dx > 385 || x + dx < 15) dx = -dx;
+            if(y + dy < 25) dy = -dy;
+            else if(y + dy > 475) {
+                if(x > paddleX && x < paddleX + paddleWidth) dy = -dy;
+                else { gameRunning = false; if(score > highScore) highScore = score; save(); document.getElementById("menu").classList.remove("hidden"); }
+            }
+            x += dx; y += dy;
+        }
+
+        canvas.addEventListener("mousemove", (e) => {
+            let rect = canvas.getBoundingClientRect();
+            paddleX = (e.clientX - rect.left) - paddleWidth/2;
+            if(paddleX < 0) paddleX = 0; if(paddleX > 400 - paddleWidth) paddleX = 400 - paddleWidth;
+        });
+
+        canvas.addEventListener("touchmove", (e) => {
+            let rect = canvas.getBoundingClientRect();
+            paddleX = (e.touches[0].clientX - rect.left) - paddleWidth/2;
+            e.preventDefault();
+        }, {passive: false});
+
+        updateUI();
+    </script>
+</body>
+</html>
